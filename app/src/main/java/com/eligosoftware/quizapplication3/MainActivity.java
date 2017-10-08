@@ -1,5 +1,7 @@
 package com.eligosoftware.quizapplication3;
 
+import android.content.Context;
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -13,9 +15,11 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG="QuizActivity";
     private static final String KEY_INDEX="index";
+    private static final int REQUEST_CODE_CHEAT=0;
+    private boolean mIsCheater;
 
     private Button mTrueButton;
-    private Button mFalseButton;
+    private Button mFalseButton,mCheatButton;
     private ImageButton mNextButton;
     private ImageButton mPrevButton;
     private TextView mQuestionTextView;
@@ -87,7 +91,15 @@ public class MainActivity extends AppCompatActivity {
                 checkAnswer(false);
             }
         });
-
+        mCheatButton=(Button)findViewById(R.id.cheat_button);
+        mCheatButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                boolean answerIsTrue=mQuestionBank[mCurrentIndex].isAnstwerTrue();
+                Intent i =CheatActivity.newIntent(MainActivity.this,answerIsTrue);
+                startActivityForResult(i,REQUEST_CODE_CHEAT);
+            }
+        });
 
         mQuestionTextView=(TextView)findViewById(R.id.question_text_view);
         mQuestionTextView.setOnClickListener(new View.OnClickListener() {
@@ -107,6 +119,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 mCurrentIndex=(mCurrentIndex+1)%mQuestionBank.length;
+                mIsCheater=false;
                 updateQuestion();
             }
         });
@@ -115,6 +128,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 mCurrentIndex=(mQuestionBank.length+mCurrentIndex-1)%mQuestionBank.length;
+                mIsCheater=false;
                 updateQuestion();
             }
         });
@@ -124,10 +138,15 @@ public class MainActivity extends AppCompatActivity {
 
         int messageResId=0;
 
-        if(userPressedTrue==answerIsTrue){
-            messageResId=R.string.correct_toast;
-        }else{
-            messageResId=R.string.incorrect_toast;
+        if(mIsCheater){
+            messageResId=R.string.judgment_toast;
+        }
+        else{
+            if(userPressedTrue==answerIsTrue){
+                messageResId=R.string.correct_toast;
+            }else{
+                messageResId=R.string.incorrect_toast;
+            }
         }
         Toast.makeText(this,messageResId,Toast.LENGTH_SHORT).show();
     }
@@ -136,4 +155,17 @@ public class MainActivity extends AppCompatActivity {
         int question=mQuestionBank[mCurrentIndex].getTextResID();
         mQuestionTextView.setText(question);
     }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+       if(resultCode!=RESULT_OK){
+           return;
+       }
+       if(requestCode==REQUEST_CODE_CHEAT){
+           if(data==null){
+               return;
+           }
+           mIsCheater=CheatActivity.wasAnswerShown(data);
+       }
+       }
 }
