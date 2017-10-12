@@ -1,10 +1,14 @@
 package com.eligosoftware.quizapplication3;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewAnimationUtils;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -13,6 +17,8 @@ public class CheatActivity extends AppCompatActivity {
 
     private static final String EXTRA_ANSWER_IS_TRUE="com.bignerdranch.android.geoquiz.answer_is_true";
     private static final String EXTRA_ANSWER_SHOWN="com.bignerdranch.android.geoquiz.answer_shown";
+
+    private TextView mBuildVersion;
 
     private boolean mAnswerIsTrue;
     @Override
@@ -33,8 +39,32 @@ public class CheatActivity extends AppCompatActivity {
                     mAnswerTextView.setText(R.string.false_button);
                 }
                 setAnswerShownResult(true);
+
+                if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.LOLLIPOP){
+                int cx=mShowAnswer.getWidth()/2;
+                int cy=mShowAnswer.getHeight()/2;
+
+                float radius = mShowAnswer.getWidth();
+
+                Animator anim= ViewAnimationUtils.createCircularReveal(mShowAnswer,cx,cy,radius,0);
+                anim.addListener(new AnimatorListenerAdapter() {
+
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        super.onAnimationEnd(animation);
+                        mAnswerTextView.setVisibility(View.VISIBLE);
+                        mShowAnswer.setVisibility(View.INVISIBLE);
+                    }
+                });
+                anim.start();}
+                else{
+                    mAnswerTextView.setVisibility(View.VISIBLE);
+                    mShowAnswer.setVisibility(View.INVISIBLE);
+                }
             }
         });
+        mBuildVersion=(TextView)findViewById(R.id.build_version);
+        mBuildVersion.setText("API level "+Build.VERSION.SDK_INT);
     }
 
     public static boolean wasAnswerShown(Intent result){
